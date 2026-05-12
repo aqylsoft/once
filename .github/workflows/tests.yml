@@ -1,0 +1,82 @@
+name: Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.26']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=3m
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test
+        run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Check coverage threshold
+        run: |
+          percent=$(go tool cover -func=coverage.out | grep total: | awk '{print $NF}' | tr -d '%')
+          threshold=70
+          percent_int=${percent%.*}
+          echo "Coverage: $percent%"
+          if [ "$percent_int" -lt "$threshold" ]; then
+            echo "Test coverage $percent% is below threshold $threshold%"
+            exit 1
+          fi
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.out
+          fail_ci_if_error: false
+
+  c-library:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Build C shared library
+        run: make c-shared
+
+      - name: Build C tests
+        run: make c-test
+
+      - name: Run C tests
+        run: ./examples/test
+
+      - name: Upload libonce.so
+        uses: actions/upload-artifact@v4
+        with:
+          name: libonce-linux-amd64
+          path: |
+            cgo/libonce.so
+            cgo/libonce.h
