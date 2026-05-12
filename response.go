@@ -68,5 +68,5 @@ func (r *Response) writeTo(w http.ResponseWriter) {
 		w.Header()[k] = v
 	}
 	w.WriteHeader(r.StatusCode)
-	w.Write(r.Body)
+	_, _ = w.Write(r.Body)
 }

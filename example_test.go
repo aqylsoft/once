@@ -15,7 +15,7 @@ func ExampleNew() {
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"created"}`))
+		_, _ = w.Write([]byte(`{"status":"created"}`))
 	})
 
 	middleware := once.New(store)
@@ -36,7 +36,7 @@ func ExampleNew_withOptions() {
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(`{"id":"123"}`))
+		_, _ = w.Write([]byte(`{"id":"123"}`))
 	})
 
 	middleware := once.New(store,
@@ -84,7 +84,7 @@ func ExampleMemoryStore() {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Handler called")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ok"))
+		_, _ = w.Write([]byte("ok"))
 	})
 
 	middleware := once.New(store)
