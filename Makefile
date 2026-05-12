@@ -1,4 +1,4 @@
-.PHONY: all build test test-race c-shared c-test c-example clean
+.PHONY: all build test test-race bench c-shared c-test c-example clean
 
 all: build test
 
@@ -10,6 +10,9 @@ test:
 
 test-race:
 	go test -race ./...
+
+bench:
+	go test -bench=. -benchmem -benchtime=3s ./...
 
 test-cover:
 	go test -coverprofile=coverage.out ./...

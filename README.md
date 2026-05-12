@@ -107,6 +107,30 @@ void once_unlock(int lockId);
 | 409 | Request with same key in progress |
 | 422 | Request body mismatch |
 
+## Benchmarks
+
+Run benchmarks:
+
+```bash
+make bench
+```
+
+Results on Intel Core i7-1355U:
+
+| Benchmark | ns/op | B/op | allocs/op |
+|-----------|------:|-----:|----------:|
+| MemoryStore_Get | 50 | 0 | 0 |
+| MemoryStore_Get_Parallel | 89 | 0 | 0 |
+| MemoryStore_Set | 116 | 32 | 1 |
+| MemoryStore_Lock | 420 | 132 | 4 |
+| Middleware_CacheHit | 2,834 | 5,747 | 16 |
+| Middleware_CacheHit_Parallel | 3,427 | 5,750 | 16 |
+| Middleware_CacheMiss | 4,429 | 6,307 | 26 |
+| Middleware_NoKey (passthrough) | 2,716 | 5,395 | 15 |
+| Middleware_WithBodyHash | 4,632 | 7,048 | 33 |
+| ThunderingHerd (100 goroutines) | 618,231 | 617,004 | 1,990 |
+| MixedWorkload (90% read/10% write) | 483 | 35 | 2 |
+
 ## License
 
 MIT
