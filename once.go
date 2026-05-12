@@ -74,7 +74,7 @@ func New(store Store, opts ...Option) func(http.Handler) http.Handler {
 
 			if cfg.cacheableStatus[rw.statusCode] {
 				resp := rw.toResponse(requestHash)
-				store.Set(ctx, key, resp, cfg.ttl)
+				_ = store.Set(ctx, key, resp, cfg.ttl)
 			}
 		})
 	}

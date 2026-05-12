@@ -127,7 +127,7 @@ func TestMemoryStore_ConcurrentAccess(t *testing.T) {
 				Body:       []byte("test"),
 				CreatedAt:  time.Now(),
 			}
-			s.Set(ctx, "key", resp, time.Hour)
+			_ = s.Set(ctx, "key", resp, time.Hour)
 		}(i)
 
 		go func(i int) {

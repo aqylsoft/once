@@ -19,7 +19,7 @@ func TestMiddleware_NoKey(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount.Add(1)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ok"))
+		_, _ = w.Write([]byte("ok"))
 	})
 
 	middleware := New(store)
@@ -69,7 +69,7 @@ func TestMiddleware_IdempotentRequest(t *testing.T) {
 		callCount.Add(1)
 		w.Header().Set("X-Custom", "value")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"result":"success"}`))
+		_, _ = w.Write([]byte(`{"result":"success"}`))
 	})
 
 	middleware := New(store)
@@ -123,7 +123,7 @@ func TestMiddleware_ThunderingHerd(t *testing.T) {
 		callCount.Add(1)
 		time.Sleep(50 * time.Millisecond)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ok"))
+		_, _ = w.Write([]byte("ok"))
 	})
 
 	middleware := New(store)
@@ -183,7 +183,7 @@ func TestMiddleware_BodyMismatch(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		w.WriteHeader(http.StatusOK)
-		w.Write(body)
+		_, _ = w.Write(body)
 	})
 
 	middleware := New(store, WithRequestHashCheck(true))
@@ -220,7 +220,7 @@ func TestMiddleware_SameBodyOK(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount.Add(1)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ok"))
+		_, _ = w.Write([]byte("ok"))
 	})
 
 	middleware := New(store, WithRequestHashCheck(true))
@@ -292,7 +292,7 @@ func TestMiddleware_NonCacheableStatus(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount.Add(1)
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("error"))
+		_, _ = w.Write([]byte("error"))
 	})
 
 	middleware := New(store)
@@ -325,7 +325,7 @@ func TestMiddleware_CustomCacheableStatus(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount.Add(1)
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte("accepted"))
+		_, _ = w.Write([]byte("accepted"))
 	})
 
 	middleware := New(store, WithCacheableStatus(202))
@@ -358,7 +358,7 @@ func TestMiddleware_TTL(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount.Add(1)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ok"))
+		_, _ = w.Write([]byte("ok"))
 	})
 
 	middleware := New(store, WithTTL(50*time.Millisecond))
