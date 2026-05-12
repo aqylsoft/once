@@ -8,9 +8,6 @@ before:
 builds:
   - skip: true
 
-archives:
-  - format: tar.gz
-
 changelog:
   sort: asc
   filters:
