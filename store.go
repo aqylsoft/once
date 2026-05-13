@@ -23,7 +23,8 @@ type entry struct {
 }
 
 type keyLock struct {
-	mu sync.Mutex
+	mu       sync.Mutex
+	lastUsed time.Time
 }
 
 // MemoryStore is an in-memory implementation of Store with TTL support.
@@ -34,6 +35,8 @@ type MemoryStore struct {
 	locksMu sync.Mutex
 	locks   map[string]*keyLock
 
+	lockTTL time.Duration
+
 	stopCh chan struct{}
 	stopWg sync.WaitGroup
 }
@@ -43,6 +46,7 @@ func NewMemoryStore() *MemoryStore {
 	s := &MemoryStore{
 		entries: make(map[string]*entry),
 		locks:   make(map[string]*keyLock),
+		lockTTL: 10 * time.Minute,
 		stopCh:  make(chan struct{}),
 	}
 	s.stopWg.Add(1)
@@ -87,6 +91,7 @@ func (s *MemoryStore) Lock(ctx context.Context, key string) (func(), error) {
 		kl = &keyLock{}
 		s.locks[key] = kl
 	}
+	kl.lastUsed = time.Now()
 	s.locksMu.Unlock()
 
 	if !kl.mu.TryLock() {
@@ -124,6 +129,7 @@ func (s *MemoryStore) cleanupLoop() {
 func (s *MemoryStore) cleanup() {
 	now := time.Now()
 
+	// Cleanup expired entries
 	s.mu.Lock()
 	for key, e := range s.entries {
 		if now.After(e.expiresAt) {
@@ -131,4 +137,17 @@ func (s *MemoryStore) cleanup() {
 		}
 	}
 	s.mu.Unlock()
+
+	// Cleanup stale locks (not used for lockTTL and not currently held)
+	s.locksMu.Lock()
+	for key, kl := range s.locks {
+		if now.Sub(kl.lastUsed) > s.lockTTL {
+			// TryLock to check if lock is free
+			if kl.mu.TryLock() {
+				kl.mu.Unlock()
+				delete(s.locks, key)
+			}
+		}
+	}
+	s.locksMu.Unlock()
 }

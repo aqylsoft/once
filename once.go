@@ -37,7 +37,7 @@ func New(store Store, opts ...Option) func(http.Handler) http.Handler {
 						return
 					}
 				}
-				cached.writeTo(w)
+				cached.writeTo(w, cfg.replayedHeader)
 				return
 			}
 
@@ -51,18 +51,6 @@ func New(store Store, opts ...Option) func(http.Handler) http.Handler {
 				return
 			}
 			defer unlock()
-
-			if cached, found := store.Get(ctx, key); found {
-				if cfg.requestHashCheck {
-					requestHash := hashRequestBody(r)
-					if cached.RequestHash != "" && cached.RequestHash != requestHash {
-						http.Error(w, "Request body mismatch for idempotency key", http.StatusUnprocessableEntity)
-						return
-					}
-				}
-				cached.writeTo(w)
-				return
-			}
 
 			var requestHash string
 			if cfg.requestHashCheck {

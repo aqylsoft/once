@@ -63,9 +63,12 @@ func (rw *responseWriter) toResponse(requestHash string) *Response {
 }
 
 // writeTo writes the cached response to the given http.ResponseWriter.
-func (r *Response) writeTo(w http.ResponseWriter) {
+func (r *Response) writeTo(w http.ResponseWriter, replayedHeader string) {
 	for k, v := range r.Headers {
 		w.Header()[k] = v
+	}
+	if replayedHeader != "" {
+		w.Header().Set(replayedHeader, "true")
 	}
 	w.WriteHeader(r.StatusCode)
 	_, _ = w.Write(r.Body)

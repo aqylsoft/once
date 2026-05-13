@@ -19,6 +19,7 @@ type config struct {
 	requireKey       bool
 	cacheableStatus  map[int]bool
 	requestHashCheck bool
+	replayedHeader   string
 }
 
 func defaultConfig() *config {
@@ -82,5 +83,15 @@ func WithCacheableStatus(codes ...int) Option {
 func WithRequestHashCheck(enabled bool) Option {
 	return func(c *config) {
 		c.requestHashCheck = enabled
+	}
+}
+
+// WithReplayedHeader sets the header name to indicate a replayed response.
+// When set, cached responses will include this header with value "true".
+// Example: WithReplayedHeader("X-Idempotency-Replayed")
+// Default: "" (disabled)
+func WithReplayedHeader(name string) Option {
+	return func(c *config) {
+		c.replayedHeader = name
 	}
 }

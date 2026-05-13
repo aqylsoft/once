@@ -64,6 +64,7 @@ curl -X POST http://localhost:8080/payments \
 | `WithRequireKey(bool)` | `false` | Return 400 if key missing |
 | `WithCacheableStatus(codes...)` | `200, 201, 204` | Status codes to cache |
 | `WithRequestHashCheck(bool)` | `false` | Validate request body hash |
+| `WithReplayedHeader(name)` | `""` (disabled) | Header to indicate cached response |
 
 ## Custom Store
 

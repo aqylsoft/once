@@ -388,3 +388,46 @@ func TestMiddleware_TTL(t *testing.T) {
 		t.Errorf("after TTL expiry: expected handler called twice, got %d", callCount.Load())
 	}
 }
+
+func TestMiddleware_ReplayedHeader(t *testing.T) {
+	store := NewMemoryStore()
+	defer store.Stop()
+
+	var callCount atomic.Int32
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		callCount.Add(1)
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	})
+
+	middleware := New(store, WithReplayedHeader("X-Idempotency-Replayed"))
+	wrapped := middleware(handler)
+
+	key := "replayed-key"
+
+	// First request - no replayed header
+	req1 := httptest.NewRequest(http.MethodPost, "/test", nil)
+	req1.Header.Set("Idempotency-Key", key)
+	rec1 := httptest.NewRecorder()
+
+	wrapped.ServeHTTP(rec1, req1)
+
+	if rec1.Header().Get("X-Idempotency-Replayed") != "" {
+		t.Error("first request should not have replayed header")
+	}
+
+	// Second request - should have replayed header
+	req2 := httptest.NewRequest(http.MethodPost, "/test", nil)
+	req2.Header.Set("Idempotency-Key", key)
+	rec2 := httptest.NewRecorder()
+
+	wrapped.ServeHTTP(rec2, req2)
+
+	if rec2.Header().Get("X-Idempotency-Replayed") != "true" {
+		t.Errorf("second request should have replayed header, got %q", rec2.Header().Get("X-Idempotency-Replayed"))
+	}
+
+	if callCount.Load() != 1 {
+		t.Errorf("expected handler called once, got %d", callCount.Load())
+	}
+}
